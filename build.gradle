@@ -1,0 +1,71 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+
+project.group = 'mirrg'
+project.archivesBaseName = 'mirrg.beryllium.event'
+version = '0.0.0'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+tasks.withType(AbstractCompile)*.options*.encoding = 'UTF-8'
+tasks.withType(GroovyCompile)*.groovyOptions*.encoding = 'UTF-8'
+
+def mavenRootDir = '../' * (project.group.count('.') + 2)
+
+jar {
+	manifest {
+		attributes 'Implementation-Title': 'Gradle Quickstart'
+		attributes 'Implementation-Version': version
+	}
+}
+
+task sourcesJar(type: Jar, dependsOn:classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn:javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+javadoc {
+	options.charSet = 'UTF-8'
+	options.encoding = 'UTF-8'
+}
+
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+
+repositories {
+	mavenCentral()
+
+	maven { url mavenRootDir }
+
+	//maven { url 'https://raw.githubusercontent.com/MirrgieRiana/mirrg.lithium/master/maven' }
+	//maven { url 'https://mirrgieriana.github.io/mirrg.beryllium/' }
+}
+
+dependencies {
+	testCompile group: 'junit', name: 'junit', version: '4.+'
+
+	//compile group: 'mirrg', name: 'mirrg.beryllium.template', version: '0.0+'
+}
+
+uploadArchives {
+	repositories {
+
+		mavenDeployer {
+			pom.artifactId = project.archivesBaseName
+			repository(url: 'file://localhost/' + file(mavenRootDir).getAbsolutePath())
+		}
+
+	}
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
