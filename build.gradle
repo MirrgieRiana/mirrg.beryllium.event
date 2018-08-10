@@ -43,10 +43,10 @@ artifacts {
 repositories {
 	mavenCentral()
 
-	maven { url mavenRootDir }
+	maven { url mavenRootDir + "maven" }
 
 	//maven { url 'https://raw.githubusercontent.com/MirrgieRiana/mirrg.lithium/master/maven' }
-	//maven { url 'https://mirrgieriana.github.io/mirrg.beryllium/' }
+	//maven { url 'https://mirrgieriana.github.io/mirrg.beryllium/maven' }
 }
 
 dependencies {
