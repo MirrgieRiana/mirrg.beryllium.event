@@ -1,17 +1,51 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+    }
+}
+
+import org.gradle.plugins.ide.eclipse.model.SourceFolder
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+//
 
 project.group = 'mirrg'
 project.archivesBaseName = 'mirrg.beryllium.event'
 version = '0.0.0'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 10
+targetCompatibility = 10
 tasks.withType(AbstractCompile)*.options*.encoding = 'UTF-8'
 tasks.withType(GroovyCompile)*.groovyOptions*.encoding = 'UTF-8'
 
-def mavenRootDir = '../../'
+def rootDir = '../..'
+
+// 依存関係
+
+repositories {
+	mavenCentral()
+
+	maven { url rootDir + "/maven" }
+
+	//maven { url 'https://raw.githubusercontent.com/MirrgieRiana/mirrg.lithium/master/maven' }
+	//maven { url 'https://mirrgieriana.github.io/mirrg.beryllium/maven' }
+}
+
+dependencies {
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.3+'
+    implementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.3+'
+
+	//implementation group: 'mirrg', name: 'mirrg.beryllium.template', version: '0.0+'
+}
+
+// 成果物
 
 jar {
 	manifest {
@@ -40,32 +74,86 @@ artifacts {
 	archives javadocJar
 }
 
-repositories {
-	mavenCentral()
-
-	maven { url mavenRootDir + "maven" }
-
-	//maven { url 'https://raw.githubusercontent.com/MirrgieRiana/mirrg.lithium/master/maven' }
-	//maven { url 'https://mirrgieriana.github.io/mirrg.beryllium/maven' }
-}
-
-dependencies {
-	testCompile group: 'junit', name: 'junit', version: '4.+'
-
-	//compile group: 'mirrg', name: 'mirrg.beryllium.template', version: '0.0+'
-}
-
 uploadArchives {
 	repositories {
 
 		mavenDeployer {
 			pom.artifactId = project.archivesBaseName
-			repository(url: 'file://localhost/' + file(mavenRootDir).getAbsolutePath())
+			repository(url: 'file://localhost/' + file(rootDir + "/maven").getAbsolutePath())
 		}
 
 	}
 }
 
+//////////////////////////// その他
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
+    gradleVersion = '4.9'
+}
+
+//////////////////////////// Jigsaw
+
+// 変数宣言
+ext {
+    moduleName = project.archivesBaseName
+    junitModuleName = "org.junit.jupiter.api"
+}
+
+// Gradleでのコンパイル時にモジュールパスを追加
+compileJava {
+    doFirst {
+        options.compilerArgs = [
+            "--module-path", classpath.asPath
+        ]
+        //classpath = files()
+    }
+}
+javadoc {
+    doFirst {
+        def optionFile = file("build/javadoc-option.txt")
+        optionFile.text = "--module-path " + classpath.asPath
+        options.optionFiles = [
+            optionFile
+        ]
+        //classpath = files()
+    }
+}
+compileTestJava {
+    doFirst {
+        options.compilerArgs = [
+            "--module-path", classpath.asPath,
+            "--add-modules", junitModuleName,
+            "--patch-module", "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
+            "--add-reads", "$moduleName=$junitModuleName"
+        ]
+        //classpath = files()
+    }
+}
+
+// Eclipseのビルドパスを設定
+eclipse {
+    classpath {
+        file {
+            whenMerged {cp ->
+                entries.findAll {
+                    it.kind == 'src' || it.kind == 'lib'
+                }.each { it.entryAttributes['module'] = 'true' }
+            }
+        }
+
+        defaultOutputDir = file('bin')
+        file {
+            whenMerged {cp ->
+                cp.entries.findAll { it instanceof SourceFolder }*.output = "bin"
+            }
+        }
+    }
+}
+
+// JUnit5テスト用の設定
+junitPlatform {
+    filters {
+        includeClassNamePatterns '.*Test.*'
+    }
+    configurationParameter 'junit.jupiter.testinstance.lifecycle.default', 'per_method'
 }
