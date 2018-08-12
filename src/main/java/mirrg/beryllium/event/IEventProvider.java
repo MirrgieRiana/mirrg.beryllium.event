@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 /**
  * 多種のイベントを統合的に扱うことのできるイベントプロバイダです。
  * このイベントプロバイダには、型引数Eのサブクラスであるあらゆるイベントが流れます。
- * 利用者は、 {@link #register(Class, IListener)} を使って特定のイベントのリスナーを登録することができます。
+ * 利用者は、 {@link #register(Class, Consumer)} を使って特定のイベントのリスナーを登録することができます。
  * リスナーは、登録時に指定したクラスのインスタンスであるイベントしか受理しません。
  */
 public interface IEventProvider<E>
