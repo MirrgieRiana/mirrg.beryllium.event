@@ -18,7 +18,7 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 
 project.group = 'mirrg'
 project.archivesBaseName = 'mirrg.beryllium.event'
-version = '0.0.0'
+version = '0.1.0'
 
 sourceCompatibility = 10
 targetCompatibility = 10
